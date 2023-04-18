@@ -155,6 +155,10 @@ class MyFrame(wx.Frame):
                 del buff[sel]
                 self.list_files.Clear()
                 self.list_files.Items = buff
+                if sel >= 1:
+                    self.list_files.SetSelection(sel-1)
+                elif sel==0 and len(self.list_files.Items) > 1:
+                    self.list_files.SetSelection(0)
                 self.statusbar.SetStatusText("Файлов: " + str(len(self.list_files.Items)))
 
 
