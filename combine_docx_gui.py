@@ -129,7 +129,7 @@ class MyFrame(wx.Frame):
             return
         except:
             pass
-    
+
     # обработка клавиатуры
     def onKey(self, event):
         key = event.GetKeyCode()
@@ -137,27 +137,24 @@ class MyFrame(wx.Frame):
 
         if key == wx.WXK_UP:
             if sel != -1 and sel != 0:
-                buff = self.list_files.Items
-                buff[sel], buff[sel - 1] = buff[sel - 1], buff[sel]
-                self.list_files.Clear()
-                self.list_files.Items = buff
+                buff_1 = self.list_files.GetString(sel)
+                buff_2 = self.list_files.GetString(sel - 1)
+                self.list_files.SetString(sel, buff_2)
+                self.list_files.SetString(sel - 1, buff_1)
                 self.list_files.SetSelection(sel - 1)
         elif key == wx.WXK_DOWN:
             if sel != -1 and sel != len(self.list_files.Items) - 1:
-                buff = self.list_files.Items
-                buff[sel], buff[sel + 1] = buff[sel + 1], buff[sel]
-                self.list_files.Clear()
-                self.list_files.Items = buff
+                buff_1 = self.list_files.GetString(sel)
+                buff_2 = self.list_files.GetString(sel + 1)
+                self.list_files.SetString(sel, buff_2)
+                self.list_files.SetString(sel + 1, buff_1)
                 self.list_files.SetSelection(sel + 1)
         elif key == wx.WXK_DELETE:
             if sel != -1:
-                buff = self.list_files.Items
-                del buff[sel]
-                self.list_files.Clear()
-                self.list_files.Items = buff
+                self.list_files.Delete(sel)
                 if sel >= 1:
-                    self.list_files.SetSelection(sel-1)
-                elif sel==0 and len(self.list_files.Items) > 1:
+                    self.list_files.SetSelection(sel - 1)
+                elif sel == 0 and len(self.list_files.Items) > 1:
                     self.list_files.SetSelection(0)
                 self.statusbar.SetStatusText("Файлов: " + str(len(self.list_files.Items)))
 
