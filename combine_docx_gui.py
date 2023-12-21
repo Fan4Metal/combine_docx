@@ -25,20 +25,20 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def combine_all_docx(files_list, output):
-    try:
-        if len(files_list) < 1:
-            raise Exception
-        filename_master = files_list.pop(0)
-        master = Document_compose(filename_master)
-        composer = Composer(master)
-        for file in files_list:
-            temp = Document_compose(file)
-            composer.append(temp)
-        composer.save(output)
-        return 1
-    except:
-        return -1
+class ProgressBar(wx.Dialog):
+
+    def __init__(self, parent, gauge_range):
+        super().__init__(parent, style=(wx.FRAME_TOOL_WINDOW) | wx.STAY_ON_TOP)
+        self.panel = wx.Panel(self)
+        self.main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.gauge = wx.Gauge(self.panel,
+                              range=gauge_range,
+                              size=self.FromDIP(wx.Size(290, 40)),
+                              style=wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH)
+        self.main_sizer.Add(self.gauge, proportion=1, flag=wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, border=5)
+        self.panel.SetSizer(self.main_sizer)
+        self.SetClientSize(self.FromDIP(wx.Size(300, 50)))
+        self.Center()
 
 
 class MyFrame(wx.Frame):
@@ -103,13 +103,34 @@ class MyFrame(wx.Frame):
                 self.btn_combine.Disable()
             self.statusbar.SetStatusText("Файлов: " + str(len(self.list_files.Items)))
 
+    def combine_all_docx(self, files_list, output):
+        try:
+            if len(files_list) < 1:
+                raise Exception
+            filename_master = files_list.pop(0)
+            master = Document_compose(filename_master)
+            composer = Composer(master)
+            prog_bar = ProgressBar(self, len(files_list))
+            prog_bar.gauge.Value = 0
+            prog_bar.Show()
+            for file in files_list:
+                temp = Document_compose(file)
+                composer.append(temp)
+                prog_bar.gauge.Value += 1
+                wx.Yield()
+            composer.save(output)
+            prog_bar.Destroy()
+            return 1
+        except:
+            return -1
+
     def onCombine(self, event):
         if len(self.list_files.Items) > 1:
             with wx.FileDialog(self, "Сохранить файл...", "", "", "Microsoft Word (*.docx)|*.docx", style=wx.FD_SAVE) as fileDialog:
                 if fileDialog.ShowModal() == wx.ID_CANCEL:
                     return
                 save_path_name = fileDialog.GetPath()
-            if combine_all_docx(self.list_files.Items, save_path_name) == 1:
+            if self.combine_all_docx(self.list_files.Items, save_path_name) == 1:
                 wx.MessageDialog(self, 'Выполнено!', 'Объединение файлов', wx.OK | wx.ICON_INFORMATION).ShowModal()
                 subprocess.Popen(f'explorer.exe /select,"{save_path_name}"', shell=True)
             else:
