@@ -14,6 +14,8 @@ from docxcompose.composer import Composer
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
+VER = '1.0.0'
+
 
 def get_resource_path(relative_path):
     '''
@@ -209,7 +211,7 @@ class MyFrame(wx.Frame):
 
 def main():
     app = wx.App()
-    top = MyFrame(None, title="Объединение docx")
+    top = MyFrame(None, title=f"Объединение docx {VER}")
     top.SetIcon(wx.Icon(get_resource_path("favicon.png")))
     top.SetClientSize(top.FromDIP(wx.Size(500, 600)))
     top.Centre()
