@@ -2,6 +2,8 @@ import ctypes
 import os
 import subprocess
 import sys
+import threading
+import time
 from datetime import datetime
 from glob import glob
 from os.path import basename, dirname, splitext
@@ -103,26 +105,26 @@ class MyFrame(wx.Frame):
                 self.btn_combine.Disable()
             self.statusbar.SetStatusText("Файлов: " + str(len(self.list_files.Items)))
 
-    def combine_all_docx(self, files_list, output):
+    @staticmethod
+    def combine_all_docx(files_list, output, gauge):
+        global result
         try:
             if len(files_list) < 1:
                 raise Exception
             filename_master = files_list.pop(0)
             master = Document_compose(filename_master)
             composer = Composer(master)
-            prog_bar = ProgressBar(self, len(files_list))
-            prog_bar.gauge.Value = 0
-            prog_bar.Show()
+            gauge.Value = 0
             for file in files_list:
                 temp = Document_compose(file)
                 composer.append(temp)
-                prog_bar.gauge.Value += 1
-                wx.Yield()
+                gauge.Value += 1
             composer.save(output)
-            prog_bar.Destroy()
-            return 1
+            result = True
+            return
         except:
-            return -1
+            result = False
+            return
 
     def onCombine(self, event):
         if len(self.list_files.Items) > 1:
@@ -130,11 +132,36 @@ class MyFrame(wx.Frame):
                 if fileDialog.ShowModal() == wx.ID_CANCEL:
                     return
                 save_path_name = fileDialog.GetPath()
-            if self.combine_all_docx(self.list_files.Items, save_path_name) == 1:
+            global result
+            result = False
+            self.prog_bar = ProgressBar(self, len(self.list_files.Items))
+            self.prog_bar.Show()
+            self.disable_elements()
+            self.thr = threading.Thread(target=self.combine_all_docx, args=(self.list_files.Items, save_path_name, self.prog_bar.gauge))
+            self.thr.start()
+            while self.thr.is_alive():
+                time.sleep(0.1)
+                wx.GetApp().Yield()
+                continue
+            self.prog_bar.Destroy()
+            self.enable_elements()
+            if result:
                 wx.MessageDialog(self, 'Выполнено!', 'Объединение файлов', wx.OK | wx.ICON_INFORMATION).ShowModal()
                 subprocess.Popen(f'explorer.exe /select,"{save_path_name}"', shell=True)
             else:
                 wx.MessageDialog(self, 'Ошибка!', 'Объединение файлов', wx.OK | wx.ICON_ERROR).ShowModal()
+
+    def disable_elements(self):
+        self.choice_add.Disable()
+        self.dir_pick.Disable()
+        self.list_files.Disable()
+        self.btn_combine.Disable()
+
+    def enable_elements(self):
+        self.choice_add.Enable()
+        self.dir_pick.Enable()
+        self.list_files.Enable()
+        self.btn_combine.Enable()
 
     @staticmethod
     def date_sort(files):
