@@ -32,7 +32,7 @@ def get_resource_path(relative_path):
 class ProgressBar(wx.Dialog):
 
     def __init__(self, parent, gauge_range):
-        super().__init__(parent, style=(wx.FRAME_TOOL_WINDOW) | wx.STAY_ON_TOP)
+        super().__init__(parent, style=(wx.FRAME_TOOL_WINDOW) | wx.FRAME_FLOAT_ON_PARENT)
         self.panel = wx.Panel(self)
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.gauge = wx.Gauge(self.panel,
