@@ -14,7 +14,7 @@ from docxcompose.composer import Composer
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
-VER = '1.0.0'
+VER = '1.0.1'
 
 
 def get_resource_path(relative_path):
@@ -43,6 +43,12 @@ class ProgressBar(wx.Dialog):
         self.panel.SetSizer(self.main_sizer)
         self.SetClientSize(self.FromDIP(wx.Size(300, 50)))
         self.Center()
+
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
 
 class MyFrame(wx.Frame):
@@ -138,6 +144,7 @@ class MyFrame(wx.Frame):
             result = False
             self.prog_bar = ProgressBar(self, len(self.list_files.Items))
             self.prog_bar.Show()
+            self.prog_bar.MakeModal(modal=True)
             self.disable_elements()
             self.thr = threading.Thread(target=self.combine_all_docx, args=(self.list_files.Items, save_path_name, self.prog_bar.gauge))
             self.thr.start()
@@ -145,6 +152,7 @@ class MyFrame(wx.Frame):
                 time.sleep(0.1)
                 wx.GetApp().Yield()
                 continue
+            self.prog_bar.MakeModal(modal=False)
             self.prog_bar.Destroy()
             self.enable_elements()
             if result:
